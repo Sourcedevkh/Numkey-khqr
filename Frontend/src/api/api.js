@@ -1,11 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-     baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5050",
+     baseURL: import.meta.env.VITE_API_BASE_URL,
      timeout: 30000,
      headers:{
           "Content-Type":"application/json"
-
      }
 })
 
@@ -33,11 +32,6 @@ api.interceptors.response.use(
           const status = error.response?.status;
           const errData = error.response?.data;
           console.log(`API Error: ${status ?? 'Networking'}`, errData);
-
-          // Handle specific status codes if error is 401 
-          // if(status === 401){
-          
-          // }
           return Promise.reject(error);
           
      }
