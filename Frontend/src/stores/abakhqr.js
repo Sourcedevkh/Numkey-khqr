@@ -18,6 +18,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
     let pollAttempts = 0;
     const maxPollAttempts = 120;
     const pollIntervalMs = 5000;
+    
 
     /* Get item form products.json format is JSON */
     const formatItems = (product) => {
@@ -35,7 +36,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
     };
 
     const updateCode = (value) => {
-        enteredCode.value = String(value ?? "").replace(/\D/g, "").slice(0, 3);
+        enteredCode.value = String(value ?? "").replace(/\D/g, "").slice(0, 2);
     };
 
     const clearCode = () => {
@@ -48,8 +49,13 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
 
     const appendCode = (digit) => {
         if (!/^\d$/.test(String(digit))) return;
-        if (enteredCode.value.length >= 3) return;
+        if (enteredCode.value.length >= 2) return;
         enteredCode.value += String(digit);
+
+        /* Check if 2-digit is generate khqr auto */
+        if (enteredCode.value.length === 2 && !loading.value) {
+            void submitCode();
+        }
     };
 
     const stopPaymentPolling = () => {
