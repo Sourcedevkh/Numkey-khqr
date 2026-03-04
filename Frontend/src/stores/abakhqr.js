@@ -14,10 +14,14 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
     const checkingPayment = ref(false);
 
     let pollTimer = null;
+    let qrExpireTimer = null;
     let pollRequestRunning = false;
     let pollAttempts = 0;
     const maxPollAttempts = 120;
     const pollIntervalMs = 5000;
+
+    /* QR code timeout in 2 minutes if not paid */
+    const qrTimeoutMs = 2 * 60 * 1000; 
     
 
     /* Get item form products.json format is JSON */
@@ -68,6 +72,14 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
         checkingPayment.value = false;
     };
 
+    /* Stop QR expiration timer */
+    const stopQrExpireTimer = () => {
+        if (qrExpireTimer) {
+            clearTimeout(qrExpireTimer);
+            qrExpireTimer = null;
+        }
+    };
+
     const closeSuccessModal = () => {
         showSuccessModal.value = false;
     };
@@ -93,6 +105,43 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
             throw new Error(response?.data?.message ?? "Failed to check transaction.");
         }
         return response.data;
+    };
+
+    const closeTransaction = async (tranId) => {
+        if (!tranId) return;
+        await api.post("/api/payment/close-transaction", { tran_id: tranId });
+    };
+
+    const startQrExpireTimer = (tranId) => {
+        stopQrExpireTimer();
+        if (!tranId) return;
+
+        qrExpireTimer = setTimeout(async () => {
+            try {
+                const latestStatus = await checkTransactionStatus(tranId);
+                if (isPaymentSuccess(latestStatus)) {
+                    qrData.value = null;
+                    selectedProduct.value = null;
+                    showSuccessModal.value = true;
+                    stopPaymentPolling();
+                    stopQrExpireTimer();
+                    return;
+                }
+            } catch {
+            }
+
+            try {
+                await closeTransaction(tranId);
+            } catch {
+            } finally {
+                stopPaymentPolling();
+                stopQrExpireTimer();
+                qrData.value = null;
+                selectedProduct.value = null;
+                paymentStatus.value = "";
+                error.value = "QR expired after 2 minutes. Please enter code again.";
+            }
+        }, qrTimeoutMs);
     };
 
 
@@ -122,6 +171,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
                     selectedProduct.value = null;
                     showSuccessModal.value = true;
                     stopPaymentPolling();
+                    stopQrExpireTimer();
                 }
             } catch {
             } finally {
@@ -138,6 +188,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
         paymentStatus.value = "";
         showSuccessModal.value = false;
         stopPaymentPolling();
+        stopQrExpireTimer();
 
         if (!enteredCode.value) {
             selectedProduct.value = null;
@@ -163,6 +214,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
                 payment_option: "abapay_khqr",
                 item: product.product,
                 slot: product.code,
+                lifetime: 3,
                 items: formatItems(product),
             };
 
@@ -175,6 +227,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
             qrData.value = responseData;
             enteredCode.value = "";
             startPaymentPolling(responseData?.tran_id);
+            startQrExpireTimer(responseData?.tran_id);
         } catch (requestError) {
             error.value = getErrorMessage(requestError, "Unable to connect to backend API.");
         } finally {
@@ -197,6 +250,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
         appendCode,
         closeSuccessModal,
         stopPaymentPolling,
+        stopQrExpireTimer,
         submitCode,
     };
 })
