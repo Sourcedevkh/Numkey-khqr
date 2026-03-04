@@ -1,11 +1,55 @@
 import logger from "../utils/logger.js";
 
 import abaServer from "../services/abaServer.js";
+import { sendTelegramNotification } from "../services/telegramService.js";
 import abaConfig from "../config/aba.config.js";
 import { generateRequestTime, generateQRHash, generateCheckTransactionHash, generateTransactionId } from "../utils/hashGenerator.js";
 import { normalizeItemsForAba } from "../utils/abaPayload.js";
 
 class ABAController{
+    constructor() {
+        this.transactionMap = new Map();
+        this.transactionTtlMs = 24 * 60 * 60 * 1000;
+    }
+
+    saveTransactionContext(tranId, context) {
+        if (!tranId) return;
+
+        this.transactionMap.set(tranId, {
+            ...context,
+            notified: false,
+            createdAt: Date.now(),
+        });
+
+        const now = Date.now();
+        for (const [id, value] of this.transactionMap.entries()) {
+            if (now - value.createdAt > this.transactionTtlMs) {
+                this.transactionMap.delete(id);
+            }
+        }
+    }
+
+    /* Checking condition if payment is approved after alert in telegram */
+    isPaymentApproved(abaResponse) {
+        const data = abaResponse?.data ?? abaResponse ?? {};
+        const statusCode = data?.payment_status_code ?? abaResponse?.payment_status_code;
+        const statusText = String(data?.payment_status ?? abaResponse?.payment_status ?? "").toUpperCase();
+        return statusCode === 0 || statusText === "APPROVED";
+    }
+
+    async notifyTelegramIfNeeded(tranId, abaResponse) {
+        const tx = this.transactionMap.get(tranId);
+        if (!tx || tx.notified || !this.isPaymentApproved(abaResponse)) return;
+
+        await sendTelegramNotification({
+            amount: tx.amount,
+            item: tx.item,
+            slot: tx.slot,
+        });
+
+        tx.notified = true;
+        this.transactionMap.set(tranId, tx);
+    }
 
     /* ABA generate QRCode */
     async generateQRCode(req, res){
@@ -27,6 +71,7 @@ class ABAController{
                 payout,
                 lifetime,
                 qr_image_template,
+                slot,
             } = req.body;
 
             const req_time = generateRequestTime();
@@ -61,6 +106,12 @@ class ABAController{
 
             /* Check if when ABA response is success 0: success */
             if (abaResponse.status?.code === "0") {
+                this.saveTransactionContext(tran_id, {
+                    amount: Number(amount),
+                    item: req.body.item ?? items?.[0]?.name ?? "Unknown products name",
+                    slot: String(slot ?? req.body.code ?? ""),
+                });
+
                 logger.success("QRCode generated success:", abaResponse);
                 return res.status(200).json({
                     success: true,
@@ -98,6 +149,8 @@ class ABAController{
 
             const payload = { req_time, merchant_id: abaConfig.merchantId, tran_id, hash };
             const abaResponse = await abaServer.checkTransaction(payload);
+
+            await this.notifyTelegramIfNeeded(tran_id, abaResponse);
 
             logger.info('Check transaction response: ', tran_id);
             return res.status(200).json({ success: true, data: abaResponse });
