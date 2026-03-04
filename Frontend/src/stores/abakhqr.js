@@ -161,6 +161,8 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
                 first_name: "Khon",
                 last_name: "Chanpheara",
                 payment_option: "abapay_khqr",
+                item: product.product,
+                slot: product.code,
                 items: formatItems(product),
             };
 
