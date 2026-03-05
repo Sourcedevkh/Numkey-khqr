@@ -12,16 +12,19 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
     const showSuccessModal = ref(false);
     const paymentStatus = ref("");
     const checkingPayment = ref(false);
+    const qrTimeRemaining = ref(0);
 
     let pollTimer = null;
     let qrExpireTimer = null;
+    let countdownTimer = null;
     let pollRequestRunning = false;
     let pollAttempts = 0;
     const maxPollAttempts = 120;
     const pollIntervalMs = 5000;
 
     /* QR code timeout in 2 minutes if not paid */
-    const qrTimeoutMs = 2 * 60 * 1000; 
+    const qrTimeoutMs = 2 * 60 * 1000;
+    const qrTotalSeconds = qrTimeoutMs / 1000;
     
 
     /* Get item form products.json format is JSON */
@@ -72,12 +75,32 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
         checkingPayment.value = false;
     };
 
+    const stopCountdown = () => {
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+        qrTimeRemaining.value = 0;
+    };
+
+    const startCountdown = () => {
+        stopCountdown();
+        qrTimeRemaining.value = qrTotalSeconds;
+        countdownTimer = setInterval(() => {
+            qrTimeRemaining.value -= 1;
+            if (qrTimeRemaining.value <= 0) {
+                stopCountdown();
+            }
+        }, 1000);
+    };
+
     /* Stop QR expiration timer */
     const stopQrExpireTimer = () => {
         if (qrExpireTimer) {
             clearTimeout(qrExpireTimer);
             qrExpireTimer = null;
         }
+        stopCountdown();
     };
 
     const closeSuccessModal = () => {
@@ -115,6 +138,8 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
     const startQrExpireTimer = (tranId) => {
         stopQrExpireTimer();
         if (!tranId) return;
+
+        startCountdown();
 
         qrExpireTimer = setTimeout(async () => {
             try {
@@ -244,6 +269,8 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
         showSuccessModal,
         paymentStatus,
         checkingPayment,
+        qrTimeRemaining,
+        qrTotalSeconds,
         updateCode,
         clearCode,
         backspaceCode,
