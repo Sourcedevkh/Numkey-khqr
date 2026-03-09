@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import api from "../api/api";
+import QRCode from "qrcode";
 import products from "../../products.json";
 
 export const useAbaKhqrStore = defineStore("abakhqr", () => {
@@ -249,7 +250,20 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
                 throw new Error(responseData?.message ?? "Failed to generate QR code.");
             }
 
-            qrData.value = responseData;
+            // qrData.value = responseData;
+            const currency = String(responseData.currency ?? "").toUpperCase();
+            const amount = Number(responseData.amount);
+            const formattedAmount = currency === "KHR"
+            ? `\u17DB${amount.toLocaleString("en-US")}`
+            : `$${amount.toFixed(2)}`;
+            
+            const qrBarcode = responseData.qrString
+            ? await QRCode.toDataURL(responseData.qrString, { width: 220, margin: 1 })
+            : null;
+            
+            qrData.value = { ...responseData, formattedAmount, qrBarcode };
+            console.log("QR Data:", qrData.value);
+            
             enteredCode.value = "";
             startPaymentPolling(responseData?.tran_id);
             startQrExpireTimer(responseData?.tran_id);

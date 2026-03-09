@@ -84,10 +84,29 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div v-if="qrData && selectedProduct"
+        <!-- <div v-if="qrData && selectedProduct"
           class="grid justify-items-center gap-1 rounded-lg border border-slate-700 p-3">
           <h2 class="text-2xl font-semibold">{{ selectedProduct.product }}</h2>
           <img v-if="qrData.qrImage" :src="qrData.qrImage" alt="ABA KHQR" class="mt-2 w-56 max-w-full" />
+        </div> -->
+<div v-if="qrData && selectedProduct" class="flex justify-center">
+          <div class="w-56 overflow-hidden rounded-2xl shadow-xl">
+            <!-- Red KHQR header -->
+            <div class="flex items-center justify-center gap-1 bg-red-600 py-2">
+              <span class="text-lg font-extrabold tracking-widest text-white">KHⓆR</span>
+            </div>
+            <!-- White card body -->
+            <div class="flex flex-col items-start gap-1 bg-white px-4 pb-4 pt-3 text-slate-800">
+              <p class="text-sm font-medium leading-tight">{{ selectedProduct.product }}</p>
+              <p class="text-2xl font-bold">{{ qrData.formattedAmount }}</p>
+            </div>
+            <!-- Dashed divider -->
+            <div class="border-t-2 border-dashed border-slate-200 bg-white" />
+            <!-- QR barcode area -->
+            <div class="flex justify-center bg-white py-3">
+              <img v-if="qrData.qrBarcode" :src="qrData.qrBarcode" alt="QR Code" class="w-44" />
+            </div>
+          </div>
         </div>
       </section>
     </main>
