@@ -9,12 +9,12 @@ const props = defineProps({
     },
     title: {
         type: String,
-        default: 'Payment Success',
+        default: 'សូមអរគុណ',
     },
-    message: {
-        type: String,
-        default: 'Thank you for your payment.',
-    },
+    // message: {
+    //     type: String,
+    //     default: 'សូមអរគុណ за您的支付。',
+    // },
     buttonText: {
         type: String,
         default: 'OK',
@@ -59,13 +59,13 @@ onBeforeUnmount(() => {
             <img :src="thankYouImage" alt="Thank You" class="mx-auto mb-3 h-20 w-20 object-contain" />
 
             <h3 class="text-2xl font-bold text-slate-100">{{ title }}</h3>
-            <p class="mt-2 text-slate-300">{{ message }}</p>
+            <!-- <p class="mt-2 text-slate-300">{{ message }}</p> -->
 
-            <button type="button"
+            <!-- <button type="button"
                 class="mt-5 w-full rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white transition hover:bg-emerald-400"
                 @click="emit('close')">
                 {{ buttonText }}
-            </button>
+            </button> -->
         </div>
     </div>
 </template>
