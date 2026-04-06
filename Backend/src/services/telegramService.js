@@ -25,13 +25,19 @@ Slot: ${slot}
 Time: ${phnomPenhTime}`;
 
     try {
-        const response = await axios.post(TELEGRAM_API_URL, {
+        const topicId = Number(abaConfig.TELEGRAM_TOPIC_ID);
+        const hasTopic = Number.isInteger(topicId) && topicId > 0;
+
+        const payload = {
             chat_id: abaConfig.TELETEGRAM_CHAT_ID,
             text: message,
             parse_mode: 'HTML',
-        });
+            ...(hasTopic ? { message_thread_id: topicId } : {}),
+        };
+
+        const response = await axios.post(TELEGRAM_API_URL, payload);
         console.log('Telegram notification sent:', response.data);
     } catch (error) {
-        console.error('Error sending Telegram notification:', error.response?.data || error.message);
+        console.error('Error sending Telegram notification:', error.response?.data?.description || error.response?.data || error.message);
     }
 };

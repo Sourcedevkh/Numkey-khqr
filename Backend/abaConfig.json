@@ -4,5 +4,6 @@
     "ABA_MERCHANT_ID": "eroxisabaypay",
     "PAYWAY_BASE_URL": "https://checkout-sandbox.payway.com.kh",
     "TELETEGRAM_BOT_TOKEN": "8329066803:AAESDWdAzrVUCZZ0_MWpFqQAAqCYd85PPzs",
-    "TELETEGRAM_CHAT_ID": "1003819305531"
+    "TELETEGRAM_CHAT_ID": "-1003819305531",
+    "TELEGRAM_TOPIC_ID": 2
 }
