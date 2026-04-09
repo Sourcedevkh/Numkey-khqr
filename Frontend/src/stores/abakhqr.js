@@ -25,6 +25,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
 
     /* QR code timeout in 2 minutes if not paid */
     const qrTimeoutMs = 2 * 60 * 1000;
+    // const qrTimeoutMs = 1 * 30 * 1000;
     const qrTotalSeconds = qrTimeoutMs / 1000;
     
 

@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
 
         <div v-if="qrData && selectedProduct"
           class="grid justify-items-center gap-1 rounded-lg border border-slate-700 p-3">
-          <h2 class="text-2xl font-semibold">{{ selectedProduct.product }}</h2>
+          <!-- <h2 class="text-2xl font-semibold">{{ selectedProduct.product }}</h2> -->
           <img v-if="qrData.qrImage" :src="qrData.qrImage" alt="ABA KHQR" class="mt-2 w-56 max-w-full" />
         </div>
 
