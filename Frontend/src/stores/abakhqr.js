@@ -23,8 +23,8 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
     const maxPollAttempts = 120;
     const pollIntervalMs = 5000;
 
-    /* QR code timeout in 2 minutes if not paid */
-    const qrTimeoutMs = 2 * 60 * 1000;
+    /* QR code timeout in 3 minutes if not paid */
+    const qrTimeoutMs = 3 * 60 * 1000;
     // const qrTimeoutMs = 1 * 30 * 1000;
     const qrTotalSeconds = qrTimeoutMs / 1000;
     
@@ -166,7 +166,7 @@ export const useAbaKhqrStore = defineStore("abakhqr", () => {
                 qrData.value = null;
                 selectedProduct.value = null;
                 paymentStatus.value = "";
-                error.value = "QR expired after 2 minutes. Please enter code again.";
+                error.value = "QR expired after 3 minutes. Please enter code again.";
             }
         }, qrTimeoutMs);
     };
